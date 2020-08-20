@@ -1,0 +1,85 @@
+﻿<Window x:Class="Inventory.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Inventory"
+        mc:Ignorable="d"
+        Title="Склад" Height="1080" Width="1920" Closing="OnClosing">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="3*"/>
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Button x:Name="loadTableButton" ToolTip="Загрузить таблицу пересчета" FontSize="25" Content="Загрузить таблицу" Grid.Row="0" Margin="20,20,20,20" Click="OnLoadTable"/>
+                <Button x:Name="saveTableButton" ToolTip="Сохранить изменения в таблице пересчета" IsEnabled="False" FontSize="25" Content="Сохранить таблицу" Grid.Row="1" Margin="20,20,20,20" Click="OnSaveTable"/>
+            </Grid>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Button x:Name="loadDatabaseButton" ToolTip="Загрузить базу кодов товаров" FontSize="25" Content="Загрузить базу" Grid.Row="0" Margin="20,20,20,20" Click="OnLoadDatabase"/>
+                <Button x:Name="saveDatabaseButton" ToolTip="Сохранить дополненую базу кодов товаров" IsEnabled="False" FontSize="25" Content="Сохранить базу" Grid.Row="1" Margin="20,20,20,20" Click="OnSaveDatabase"/>
+            </Grid>
+            <ListBox x:Name="providersCheckBox" IsEnabled="False" ItemsSource="{Binding Providers}" Grid.Column="2" Margin="20,20,20,20">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Name}" Checked="OnCheckBoxChanged" Unchecked="OnCheckBoxChanged"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+            <Grid Grid.Column="3">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="2*"/>
+                </Grid.RowDefinitions>
+                <Label FontSize="20" Margin="10,10,10,0" Content="Введите штрихкод:" VerticalAlignment="Bottom" HorizontalAlignment="Left"/>
+                <TextBox x:Name="barcodeTextBox" IsEnabled="False" FontSize="20" Margin="10,10,10,10" Grid.Row="1" TextChanged="OnBarcodeTextChanged"/>
+                <TextBox x:Name="heapTextBox" ToolTip="Пункт назначения товара" IsEnabled="False" FontSize="30" Margin="10,10,10,10" Grid.Row="2"/>
+            </Grid>
+            <Grid Grid.Column="4">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Label FontSize="20" Grid.Row="0"  Margin="10,10,10,0" Content="Поиск по наименованию:" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+                <TextBox x:Name="searchTextBox" IsEnabled="False" FontSize="20" Grid.Row="1" Margin="10,10,10,10" TextChanged="OnSearchTextChanged"/>
+                <Button x:Name="addLinkButton" ToolTip="Создать пару кода товара - его штрихкода" IsEnabled="False" FontSize="20" Content="Связать" Grid.Row="2" Margin="10,10,10,10" Click="OnAddLink"/>
+                <Button x:Name="cancelButton" ToolTip="Отменить последнее добавление товара" IsEnabled="False" FontSize="20" Content="Отменить" Grid.Row="3" Margin="10,10,10,10" Click="OnCancel"/>
+            </Grid>
+        </Grid>
+        <DataGrid x:Name="dataGridView" Margin="20,10,20,10" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="True" ItemsSource="{Binding Items}" Grid.Row="1">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Заказ" Binding="{Binding Order}"/>
+                <DataGridTextColumn Header="Id" Binding="{Binding Id}"/>
+                <DataGridTextColumn Header="Наименование" Binding="{Binding Name}"/>
+                <DataGridTextColumn Header="Факт" Binding="{Binding CurrentNumber}"/>
+                <DataGridTextColumn Header="Кол" Binding="{Binding Number}"/>
+                <DataGridTextColumn Header="Город" Binding="{Binding To}"/>
+                <DataGridTextColumn Header="Поставщик" Binding="{Binding From}"/>
+            </DataGrid.Columns>
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Setter Property="Background" Value="{Binding ColorOfRow}"/>
+                </Style>
+            </DataGrid.RowStyle>
+        </DataGrid>
+    </Grid>
+</Window>

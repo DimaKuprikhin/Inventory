@@ -1,0 +1,88 @@
+﻿using Inventory;
+using System;
+using System.Collections.Generic;
+
+namespace InventoryManager
+{
+    class Presenter
+    {
+        private Database database;
+        private Table table;
+        private MainWindow window;
+
+        public Presenter(MainWindow window)
+        {
+            this.window = window;
+            window.loadTable += OnLoadTable;
+            window.visibleItemsChanged += OnVisibleItemsChanged;
+            window.loadDatabase += OnLoadDatabase;
+            window.saveDatabase += OnSaveDatabase;
+            window.inputBarcode += OnInputBarcode;
+            window.addLink += OnAddLink;
+            window.saveTable += OnSaveTable;
+            window.cancel += OnCancel;
+        }
+
+        private void OnLoadTable(object sender, EventArgs e)
+        {
+            table = new Table(window.TableFilePath);
+            window.SetDataGrid(table.VisibleItems);
+            window.SetProviders(table.Providers);
+        }
+
+        private void OnSaveTable(object sender, EventArgs e)
+        {
+            table.Save(window.TableFilePath);
+        }
+
+        public void OnVisibleItemsChanged(object sender, EventArgs e)
+        {
+            List<string> providers = new List<string>();
+            for (int i = 1; i < window.Providers.Count; ++i)
+                if (window.Providers[i].IsChecked)
+                    providers.Add(window.Providers[i].Name);
+            table.UpdateVisibleItems(providers, window.SearchText);
+            window.SetDataGrid(table.VisibleItems);
+        }
+
+        public void OnLoadDatabase(object sender, EventArgs e)
+        {
+            database = new Database(window.DatabaseFilePath);
+        }
+
+        public void OnSaveDatabase(object sender, EventArgs e)
+        {
+            database.Save();
+        }
+
+        public void OnInputBarcode(object sender, EventArgs e)
+        {
+            Tuple<string, string> pair = database.FindPair(window.Barcode);
+            Item result = table.Add(pair.Item2);
+            if (result == null)
+            {
+                window.ShowHeap("Не найдено");
+                return;
+            }
+            window.ShowHeap(result.To);
+            OnVisibleItemsChanged(this, EventArgs.Empty);
+            window.SetDataGrid(table.VisibleItems);
+            window.Clear = true;
+            if (table.History.Count > 0)
+                window.IsCancelActive = true;
+        }
+
+        public void OnAddLink(object sender, EventArgs e)
+        {
+            database.AddNewPair(window.Barcode, window.SelectedItem.Id);
+            window.IsCancelActive = true;
+        }
+
+        public void OnCancel(object sender, EventArgs e)
+        {
+            table.Cancel();
+            window.IsCancelActive = table.History.Count > 0;
+            window.SetDataGrid(table.VisibleItems);
+        }
+    }
+}
