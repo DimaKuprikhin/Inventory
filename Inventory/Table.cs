@@ -12,9 +12,6 @@ namespace InventoryManager
         public List<Item> VisibleItems { get; private set; } = new List<Item>();
         public List<string> Providers { get; private set; } = new List<string>();
         public Stack<Item> History { get; private set; } = new Stack<Item>();
-        public Item Highlighted { get; private set; } = null;
-
-        static Table() { }
 
         public Table(string path)
         {
@@ -33,7 +30,14 @@ namespace InventoryManager
                     next.Order = orderString.ToString();
                     next.Id = sheet.Cells[i, 2].Value2.ToString();
                     next.Name = sheet.Cells[i, 3].Value2.ToString();
-                    next.CurrentNumber = int.Parse(sheet.Cells[i, 4].Value2.ToString());
+                    try
+                    {
+                        next.CurrentNumber = int.Parse(sheet.Cells[i, 4].Value2.ToString());
+                    }
+                    catch
+                    {
+                        next.CurrentNumber = 0;
+                    }
                     next.Number = int.Parse(sheet.Cells[i, 5].Value2.ToString());
                     next.To = sheet.Cells[i, 9].Value2 == null ?
                         sheet.Cells[i, 6].Value2.ToString() :
@@ -81,6 +85,7 @@ namespace InventoryManager
                 if (!has)
                     Providers.Add(items[i].From);
             }
+            Providers.Add("ИЗЛИШЕК");
         }
 
         public void UpdateVisibleItems(List<string> providers, string name)
@@ -90,11 +95,6 @@ namespace InventoryManager
             VisibleItems = new List<Item>();
             for(int i = 0; i < items.Count; ++i)
             {
-                if (items[i].To == "ИЗЛИШЕК")
-                {
-                    VisibleItems.Add(items[i]);
-                    continue;
-                }
                 for (int j = 0; j < providers.Count; ++j)
                 {
                     if (items[i].From == providers[j] && 
@@ -135,7 +135,7 @@ namespace InventoryManager
                     item.Id = found[0].Id;
                     item.Name = found[0].Name;
                     item.To = "ИЗЛИШЕК";
-                    item.From = "";
+                    item.From = "ИЗЛИШЕК";
                     items.Add(item);
                     result = item;
                 }
