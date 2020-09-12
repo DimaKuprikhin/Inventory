@@ -21,6 +21,7 @@ namespace InventoryManager
             window.addLink += OnAddLink;
             window.saveTable += OnSaveTable;
             window.cancel += OnCancel;
+            window.addWithoutBarcode += OnAddWithoutBarcode;
         }
 
         private void OnLoadTable(object sender, EventArgs e)
@@ -41,13 +42,13 @@ namespace InventoryManager
             for (int i = 1; i < window.Providers.Count; ++i)
                 if (window.Providers[i].IsChecked)
                     providers.Add(window.Providers[i].Name);
-            table.UpdateVisibleItems(providers, window.SearchText);
+            table.UpdateVisibleItems(providers, window.SearchText, window.IsOnlyUnfilled);
             window.SetDataGrid(table.VisibleItems);
         }
 
         public void OnLoadDatabase(object sender, EventArgs e)
         {
-            database = new Database(window.DatabaseFilePath);
+            database = new Database(window.DatabaseFilePath, true);
         }
 
         public void OnSaveDatabase(object sender, EventArgs e)
@@ -65,6 +66,7 @@ namespace InventoryManager
                 return;
             }
             window.ShowHeap(result.To);
+            window.ShowName(result.Name);
             OnVisibleItemsChanged(this, EventArgs.Empty);
             window.SetDataGrid(table.VisibleItems);
             window.Clear = true;
@@ -83,6 +85,17 @@ namespace InventoryManager
             table.Cancel();
             window.IsCancelActive = table.History.Count > 0;
             window.SetDataGrid(table.VisibleItems);
+        }
+
+        public void OnAddWithoutBarcode(object sender, EventArgs e)
+        {
+            Item result = table.Add(window.SelectedItem);
+            window.ShowHeap(result.To);
+            window.ShowName(result.Name);
+            OnVisibleItemsChanged(this, EventArgs.Empty);
+            window.SetDataGrid(table.VisibleItems);
+            window.Clear = true;
+            window.IsCancelActive = true;
         }
     }
 }

@@ -12,6 +12,7 @@ namespace InventoryManager
         public int Number { get; set; }
         public string To { get; set; }
         public string From { get; set; }
+        public string Comment { get; set; }
         public SolidColorBrush ColorOfRow { get; set; } = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
 
         public Item() { }

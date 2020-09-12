@@ -38,6 +38,8 @@ namespace Inventory
                 providersCheckBox.IsEnabled = true;
                 saveTableButton.IsEnabled = true;
                 saveDatabaseButton.IsEnabled = true;
+                isOnlyUnfilled.IsEnabled = true;
+                addWithoutBarcodeButton.IsEnabled = true;
             }
         }
 
@@ -89,7 +91,7 @@ namespace Inventory
             try
             {
                 OpenFileDialog dialog = new OpenFileDialog();
-                dialog.Filter = "CSV файл (*.csv)|*.csv";
+                dialog.Filter = "CSV файл (*.csv)|*csv|Excel файл (*.xls)|*.xls|Excel файл (*.xlsx)|*.xlsx";
                 bool? dialogResult = dialog.ShowDialog();
                 if (dialogResult == true)
                 {
@@ -132,6 +134,7 @@ namespace Inventory
             public Box(string name) { Name = name; }
         }
         public List<Box> Providers { get; private set; } = new List<Box>();
+        public bool IsOnlyUnfilled { get; private set; } = false;
         private bool isAllChosen = true;
         public void SetProviders(List<string> providers)
         {
@@ -167,6 +170,7 @@ namespace Inventory
                     isAllChosen = true;
                     Providers[0].IsChecked = true;
                 }
+                IsOnlyUnfilled = (bool)isOnlyUnfilled.IsChecked;
                 visibleItemsChanged?.Invoke(this, EventArgs.Empty);
                 providersCheckBox.ItemsSource = Providers;
                 providersCheckBox.Items.Refresh();
@@ -228,7 +232,7 @@ namespace Inventory
             {
                 MessageBox.Show(ex.Message + Environment.NewLine +
                     ex.StackTrace + Environment.NewLine +
-                    "Ошибка вводе в строку поиска");
+                    "Ошибка ввода в строку поиска");
             }
         }
 
@@ -256,6 +260,7 @@ namespace Inventory
                 }
                 addLink?.Invoke(this, EventArgs.Empty);
                 OnBarcodeTextChanged(this, EventArgs.Empty);
+                searchTextBox.Text = "";
             }
             catch (Exception ex)
             {
@@ -265,12 +270,45 @@ namespace Inventory
             }
         }
 
+        public event EventHandler<EventArgs> addWithoutBarcode;
+        public void OnAddWithoutBarcode(object sender, EventArgs e)
+        {
+            try
+            {
+                if (dataGridView.SelectedItems.Count == 1 ||
+                    dataGridView.SelectedCells.Count == 1)
+                {
+                    SelectedItem = dataGridView.SelectedItems[0] as Item;
+                }
+                else
+                {
+                    MessageBox.Show("Для добавления должен быть выбран ровно один товар");
+                    return;
+                }
+                addWithoutBarcode?.Invoke(this, EventArgs.Empty);
+                searchTextBox.Text = "";
+                barcodeTextBox.Text = "";
+                Clear = false;
+                cancelButton.IsEnabled = IsCancelActive;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message + Environment.NewLine +
+                    ex.StackTrace + Environment.NewLine +
+                    "Ошибка при добавлении без штрихкода");
+            }
+        }
+
 
         public void ShowHeap(string heap)
         {
             heapTextBox.Text = heap;
         }
 
+        public void ShowName(string name)
+        {
+            nameTextBox.Text = name;
+        }
 
         public void SetDataGrid(List<Item> items)
         {

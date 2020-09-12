@@ -30,19 +30,19 @@ namespace InventoryManager
                     next.Order = orderString.ToString();
                     next.Id = sheet.Cells[i, 2].Value2.ToString();
                     next.Name = sheet.Cells[i, 3].Value2.ToString();
-                    try
-                    {
-                        next.CurrentNumber = int.Parse(sheet.Cells[i, 4].Value2.ToString());
-                    }
-                    catch
-                    {
+                    var currNumber = sheet.Cells[i, 4].Value2;
+                    if (currNumber == null)
                         next.CurrentNumber = 0;
-                    }
+                    else
+                        next.CurrentNumber = int.Parse(currNumber.ToString());
                     next.Number = int.Parse(sheet.Cells[i, 5].Value2.ToString());
-                    next.To = sheet.Cells[i, 9].Value2 == null ?
-                        sheet.Cells[i, 6].Value2.ToString() :
-                        sheet.Cells[i, 9].Value2.ToString();
+                    next.To = sheet.Cells[i, 6].Value2.ToString();
                     next.From = sheet.Cells[i, 7].Value2.ToString();
+                    var comment = sheet.Cells[i, 9].Value2;
+                    if (comment == null)
+                        next.Comment = "";
+                    else
+                        next.Comment = comment.ToString();
                     if(next.CurrentNumber == next.Number)
                         next.ColorOfRow = new SolidColorBrush(Color.FromRgb(82, 186, 80));
                     else
@@ -88,7 +88,8 @@ namespace InventoryManager
             Providers.Add("ИЗЛИШЕК");
         }
 
-        public void UpdateVisibleItems(List<string> providers, string name)
+        public void UpdateVisibleItems(List<string> providers, string name, 
+            bool isOnlyUnfulled)
         {
             if(name != null)
                 name = name.ToLower();
@@ -98,7 +99,8 @@ namespace InventoryManager
                 for (int j = 0; j < providers.Count; ++j)
                 {
                     if (items[i].From == providers[j] && 
-                        (name == null || name == "" || items[i].Name.ToLower().Contains(name)))
+                        (name == null || name == "" || items[i].Name.ToLower().Contains(name)) && 
+                        (!isOnlyUnfulled || isOnlyUnfulled && items[i].CurrentNumber < items[i].Number))
                     {
                         VisibleItems.Add(items[i]);
                         break;
@@ -155,6 +157,11 @@ namespace InventoryManager
             return result;
         }
 
+        public Item Add(Item item)
+        {
+            return Add(item.Id);
+        }
+
         public void Save(string path)
         {
             Excel.Application app = new Excel.Application();
@@ -165,6 +172,7 @@ namespace InventoryManager
                 for(int i = 0; i < items.Count; ++i)
                 {
                     sheet.Cells[i + 2, 4] = items[i].CurrentNumber.ToString();
+                    sheet.Cells[i + 2, 9] = items[i].Comment;
                     if (items[i].To == "ИЗЛИШЕК")
                     {
                         sheet.Cells[i + 2, 1] = items[i].Order;
@@ -203,17 +211,17 @@ namespace InventoryManager
 
         private int GetPrior(Item item)
         {
-            if (item.To == "ДОСТАВКА РЯЗАНЬ" && item.Number == 1) return 0;
+            if (item.To == "Доставка" && item.Number == 1) return 0;
             if (item.To == "Н.Новгород" && item.Number == 1) return 1;
             if (item.To == "Воронеж" && item.Number == 1) return 2;
             if (item.To == "Рязань" && item.Number == 1) return 3;
-            if (item.To == "ДОСТАВКА РЯЗАНЬ" && item.Number > 1) return 4;
+            if (item.To == "Доставка" && item.Number > 1) return 4;
             if (item.To == "Н.Новгород" && item.Number > 1) return 5;
             if (item.To == "Воронеж" && item.Number > 1) return 6;
             if (item.To == "Рязань" && item.Number > 1) return 7;
-            if (item.To == "В МАГАЗИН") return 8;
+            if (item.To == "Магазин") return 8;
             throw new ArgumentException("Неизвестная точка доставки." +
-                "Допустимы только: ДОСТАВКА РЯЗАНЬ, Н.Новгород, Воронеж, Рязань, МАГАЗИН");
+                "Допустимы только: Доставка, Н.Новгород, Воронеж, Рязань, Магазин");
         }
     }
 }
