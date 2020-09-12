@@ -6,6 +6,7 @@ using Microsoft.Win32;
 using InventoryManager;
 using System.ComponentModel;
 using System.Linq.Expressions;
+using System.Windows.Threading;
 
 namespace Inventory
 {
@@ -174,6 +175,7 @@ namespace Inventory
                 visibleItemsChanged?.Invoke(this, EventArgs.Empty);
                 providersCheckBox.ItemsSource = Providers;
                 providersCheckBox.Items.Refresh();
+                barcodeTextBox.Focus();
             }
             catch (Exception ex)
             {
@@ -188,6 +190,7 @@ namespace Inventory
         public string Barcode { get; private set; }
         public bool Clear { get; set; } = false;
         private bool isFirstLevel = true;
+        private DispatcherTimer timer = null;
         private void OnBarcodeTextChanged(object sender, EventArgs e)
         {
             try
@@ -199,6 +202,7 @@ namespace Inventory
                     heapTextBox.Text = "";
                     return;
                 }
+                timer?.Stop();
                 Barcode = barcodeTextBox.Text;
                 inputBarcode?.Invoke(this, EventArgs.Empty);
                 if (Clear)
@@ -207,6 +211,8 @@ namespace Inventory
                     barcodeTextBox.Text = "";
                     isFirstLevel = true;
                 }
+                else
+                    timer = new DispatcherTimer(TimeSpan.FromSeconds(2.0), DispatcherPriority.Normal, new EventHandler((o, s) => { searchTextBox.Focus(); timer?.Stop(); }), Dispatcher.CurrentDispatcher);
                 Clear = false;
                 cancelButton.IsEnabled = IsCancelActive;
             }
@@ -261,6 +267,7 @@ namespace Inventory
                 addLink?.Invoke(this, EventArgs.Empty);
                 OnBarcodeTextChanged(this, EventArgs.Empty);
                 searchTextBox.Text = "";
+                barcodeTextBox.Focus();
             }
             catch (Exception ex)
             {
@@ -290,6 +297,7 @@ namespace Inventory
                 barcodeTextBox.Text = "";
                 Clear = false;
                 cancelButton.IsEnabled = IsCancelActive;
+                barcodeTextBox.Focus();
             }
             catch (Exception ex)
             {
@@ -357,6 +365,7 @@ namespace Inventory
             {
                 cancel?.Invoke(this, EventArgs.Empty);
                 cancelButton.IsEnabled = IsCancelActive;
+                barcodeTextBox.Focus();
             }
             catch (Exception ex)
             {
