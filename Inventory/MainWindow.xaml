@@ -59,7 +59,18 @@
                             <RowDefinition/>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <Label FontSize="20" Margin="10,10,10,0" Content="Введите штрихкод:" VerticalAlignment="Bottom" Grid.Row="0" HorizontalAlignment="Left"/>
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition Width="70"/>
+                            </Grid.ColumnDefinitions>
+                            <Label FontSize="20" Margin="10,10,10,0" Content="Введите штрихкод:" VerticalAlignment="Bottom" Grid.Column="0" HorizontalAlignment="Left"/>
+                            <Button x:Name="refreshButton" Margin="10,0,10,0" Grid.Column="1" Click="OnRefreshButtonClick" HorizontalAlignment="Right" ToolTip="Очистка поля ввода штрихкода">
+                                <StackPanel>
+                                    <Image Source="/refresh.png" Grid.Row="1"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
                         <TextBox x:Name="barcodeTextBox" IsEnabled="False" FontSize="20" Margin="10,10,10,10" Grid.Row="1" TextChanged="OnBarcodeTextChanged"/>
                     </Grid>
                     <Grid Grid.Column="1">
@@ -96,7 +107,7 @@
                 <DataGridTextColumn Header="Заказ" Binding="{Binding Order}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Id" Binding="{Binding Id}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Наименование" Binding="{Binding Name}" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Факт" Binding="{Binding CurrentNumber}" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Факт" Binding="{Binding CurrentNumber}" IsReadOnly="False"/>
                 <DataGridTextColumn Header="Кол" Binding="{Binding Number}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Город" Binding="{Binding To}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Поставщик" Binding="{Binding From}" IsReadOnly="True"/>

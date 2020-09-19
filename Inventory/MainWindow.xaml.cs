@@ -75,6 +75,7 @@ namespace Inventory
             try
             {
                 saveTable?.Invoke(this, EventArgs.Empty);
+                MessageBox.Show("Сохранение таблицы закончено", "");
             }
             catch(Exception ex)
             {
@@ -118,6 +119,7 @@ namespace Inventory
             try
             {
                 saveDatabase?.Invoke(this, EventArgs.Empty);
+                MessageBox.Show("Сохранение базы кодов закончено", "");
             }
             catch (Exception ex)
             {
@@ -189,7 +191,13 @@ namespace Inventory
         public event EventHandler<EventArgs> inputBarcode;
         public string Barcode { get; private set; }
         public bool Clear { get; set; } = false;
+        // False, если событие вызвано изменением текста через код,
+        // все остальное время true.
         private bool isFirstLevel = true;
+        // Таймер для перевода фаокуса с поля ввода штрихкода в 
+        // поле поиска по наименованию. Если прошло 2 секунды после
+        // ввода последнего символа и не найдено такого штрихкода, то 
+        // переводится фокус.
         private DispatcherTimer timer = null;
         private void OnBarcodeTextChanged(object sender, EventArgs e)
         {
@@ -212,7 +220,7 @@ namespace Inventory
                     isFirstLevel = true;
                 }
                 else
-                    timer = new DispatcherTimer(TimeSpan.FromSeconds(2.0), DispatcherPriority.Normal, new EventHandler((o, s) => { searchTextBox.Focus(); timer?.Stop(); }), Dispatcher.CurrentDispatcher);
+                    timer = new DispatcherTimer(TimeSpan.FromSeconds(1.0), DispatcherPriority.Normal, new EventHandler((o, s) => { searchTextBox.Focus(); timer?.Stop(); }), Dispatcher.CurrentDispatcher);
                 Clear = false;
                 cancelButton.IsEnabled = IsCancelActive;
             }
@@ -324,7 +332,7 @@ namespace Inventory
             {
                 dataGridView.ItemsSource = items;
                 for (int i = 0; i < items.Count; ++i)
-                    if (items[i].ColorOfRow.Color.R == 67)
+                    if (items[i].ColorOfRow.Color == Table.LastItemColor)
                         dataGridView.ScrollIntoView(dataGridView.Items[i]);
                 dataGridView.UpdateLayout();
                 dataGridView.Items.Refresh();
@@ -337,6 +345,10 @@ namespace Inventory
             }
         }
 
+        public void ShowMessage(string text)
+        {
+            MessageBox.Show(text);
+        }
 
         public void OnClosing(object sender, CancelEventArgs e)
         {
@@ -373,6 +385,12 @@ namespace Inventory
                     ex.StackTrace + Environment.NewLine +
                     "Ошибка при отмене");
             }
+        }
+
+        public void OnRefreshButtonClick(object sender, EventArgs e)
+        {
+            barcodeTextBox.Text = "";
+            barcodeTextBox.Focus();
         }
     }
 }

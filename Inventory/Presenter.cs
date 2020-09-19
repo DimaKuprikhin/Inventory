@@ -58,8 +58,20 @@ namespace InventoryManager
 
         public void OnInputBarcode(object sender, EventArgs e)
         {
-            Tuple<string, string> pair = database.FindPair(window.Barcode);
-            Item result = table.Add(pair.Item2);
+            List<string> ids = database.FindPair(window.Barcode);
+            Item result;
+            try
+            {
+                result = table.Add(ids);
+            }
+            catch(ArgumentException)
+            {
+                window.ShowMessage(       "Найдено два разных товара в " +
+                    Environment.NewLine + "текущей таблице для введеного" +
+                    Environment.NewLine + "штрихкода. Удалите один из них" +
+                    Environment.NewLine + "или добавьте товар без штрихкода.");
+                return;
+            }
             if (result == null)
             {
                 window.ShowHeap("Не найдено");

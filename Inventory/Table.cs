@@ -12,6 +12,9 @@ namespace InventoryManager
         public List<Item> VisibleItems { get; private set; } = new List<Item>();
         public List<string> Providers { get; private set; } = new List<string>();
         public Stack<Item> History { get; private set; } = new Stack<Item>();
+        public static readonly Color DefaultItemColor = Color.FromRgb(255, 255, 255);
+        public static readonly Color LastItemColor = Color.FromRgb(255, 255, 0);
+        public static readonly Color FullItemColor = Color.FromRgb(82, 186, 80);
 
         public Table(string path)
         {
@@ -44,9 +47,9 @@ namespace InventoryManager
                     else
                         next.Comment = comment.ToString();
                     if(next.CurrentNumber == next.Number)
-                        next.ColorOfRow = new SolidColorBrush(Color.FromRgb(82, 186, 80));
+                        next.ColorOfRow = new SolidColorBrush(FullItemColor);
                     else
-                        next.ColorOfRow = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                        next.ColorOfRow = new SolidColorBrush(DefaultItemColor);
                     items.Add(next);
                 }
             }
@@ -109,9 +112,16 @@ namespace InventoryManager
             }
         }
 
-        public Item Add(string id)
+        public Item Add(List<string> ids)
         {
-            List<Item> found = VisibleItems.FindAll(item => item.Id == id);
+            List<Item> found = new List<Item>();
+            for (int i = 0; i < VisibleItems.Count; ++i)
+                for (int j = 0; j < ids.Count; ++j)
+                    if (VisibleItems[i].Id == ids[j])
+                        found.Add(VisibleItems[i]);
+            for (int i = 1; i < found.Count; ++i)
+                if (found[i].Id != found[0].Id)
+                    throw new ArgumentException("несколько товаров для этого штрихкода");
             if(found.Count == 0)
                 return null;
             int index = -1;
@@ -147,19 +157,19 @@ namespace InventoryManager
             if (History.Count > 0)
             {
                 if (History.Peek().CurrentNumber == History.Peek().Number)
-                    History.Peek().ColorOfRow = new SolidColorBrush(Color.FromRgb(82, 186, 80));
+                    History.Peek().ColorOfRow = new SolidColorBrush(FullItemColor);
                 else
-                    History.Peek().ColorOfRow = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+                    History.Peek().ColorOfRow = new SolidColorBrush(DefaultItemColor);
             }
             ++result.CurrentNumber;
             History.Push(result);
-            result.ColorOfRow = new SolidColorBrush(Color.FromRgb(67, 162, 240));
+            result.ColorOfRow = new SolidColorBrush(LastItemColor);
             return result;
         }
 
         public Item Add(Item item)
         {
-            return Add(item.Id);
+            return Add(new List<string> { item.Id });
         }
 
         public void Save(string path)
@@ -203,24 +213,24 @@ namespace InventoryManager
         public void Cancel()
         {
             --History.Peek().CurrentNumber;
-            History.Peek().ColorOfRow = new SolidColorBrush(Color.FromRgb(255, 255, 255));
+            History.Peek().ColorOfRow = new SolidColorBrush(DefaultItemColor);
             History.Pop();
             if(History.Count > 0)
-                History.Peek().ColorOfRow = new SolidColorBrush(Color.FromRgb(67, 162, 240));
+                History.Peek().ColorOfRow = new SolidColorBrush(LastItemColor);
         }
 
         private int GetPrior(Item item)
         {
-            if (item.To == "Доставка" && item.Number == 1) return 0;
-            if (item.To == "Н.Новгород" && item.Number == 1) return 1;
-            if (item.To == "Воронеж" && item.Number == 1) return 2;
-            if (item.To == "Рязань" && item.Number == 1) return 3;
-            if (item.To == "Доставка" && item.Number > 1) return 4;
-            if (item.To == "Н.Новгород" && item.Number > 1) return 5;
-            if (item.To == "Воронеж" && item.Number > 1) return 6;
-            if (item.To == "Рязань" && item.Number > 1) return 7;
-            if (item.To == "Магазин") return 8;
-            throw new ArgumentException("Неизвестная точка доставки." +
+            if (item.To.ToLower() == "доставка" && item.Number == 1) return 0;
+            if (item.To.ToLower() == "н.новгород" && item.Number == 1) return 1;
+            if (item.To.ToLower() == "воронеж" && item.Number == 1) return 2;
+            if (item.To.ToLower() == "рязань" && item.Number == 1) return 3;
+            if (item.To.ToLower() == "доставка" && item.Number > 1) return 4;
+            if (item.To.ToLower() == "н.новгород" && item.Number > 1) return 5;
+            if (item.To.ToLower() == "воронеж" && item.Number > 1) return 6;
+            if (item.To.ToLower() == "рязань" && item.Number > 1) return 7;
+            if (item.To.ToLower() == "магазин") return 8;
+            throw new ArgumentException("Неизвестная точка доставки. " +
                 "Допустимы только: Доставка, Н.Новгород, Воронеж, Рязань, Магазин");
         }
     }

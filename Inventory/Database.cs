@@ -167,27 +167,19 @@ namespace InventoryManager
             }
         }
 
-        public Tuple<string, string> FindPair(string value)
+        public List<string> FindPair(string value)
         {
+            List<string> result = new List<string>();
             for(int i = 0; i < Pairs.Count; ++i)
             {
-                if(Pairs[i].Item1 == value)
-                    return Pairs[i];
+                if (Pairs[i].Item1 == value)
+                    result.Add(Pairs[i].Item2);
             }
-            return new Tuple<string, string>("g", "g");
+            return result;
         }
 
         public void AddNewPair(string barcode, string id)
         {
-            //for(int i = 0; i < Pairs.Count; ++i)
-            //{
-            //    if(barcode == Pairs[i].Item1)
-            //    {
-            //        Pairs.RemoveAt(i);
-            //        Pairs.Add(new Tuple<string, string>(barcode, id));
-            //        return;
-            //    }
-            //}
             Pairs.Add(new Tuple<string, string>(barcode, id));
         }
 
