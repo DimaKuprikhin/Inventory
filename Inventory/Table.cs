@@ -11,7 +11,8 @@ namespace InventoryManager
         private readonly List<Item> items = new List<Item>();
         public List<Item> VisibleItems { get; private set; } = new List<Item>();
         public List<string> Providers { get; private set; } = new List<string>();
-        public Stack<Item> History { get; private set; } = new Stack<Item>();
+        public Stack<Tuple<Item, int>> History { get; private set; } = 
+            new Stack<Tuple<Item, int>>();
         public static readonly Color DefaultItemColor = Color.FromRgb(255, 255, 255);
         public static readonly Color LastItemColor = Color.FromRgb(255, 255, 0);
         public static readonly Color FullItemColor = Color.FromRgb(82, 186, 80);
@@ -38,6 +39,7 @@ namespace InventoryManager
                         next.CurrentNumber = 0;
                     else
                         next.CurrentNumber = int.Parse(currNumber.ToString());
+                    next.PreviousNumber = next.CurrentNumber;
                     next.Number = int.Parse(sheet.Cells[i, 5].Value2.ToString());
                     next.To = sheet.Cells[i, 6].Value2.ToString();
                     next.From = sheet.Cells[i, 7].Value2.ToString();
@@ -114,6 +116,7 @@ namespace InventoryManager
 
         public Item Add(List<string> ids)
         {
+            // Ищем все подходящие товары.
             List<Item> found = new List<Item>();
             for (int i = 0; i < VisibleItems.Count; ++i)
                 for (int j = 0; j < ids.Count; ++j)
@@ -124,6 +127,7 @@ namespace InventoryManager
                     throw new ArgumentException("несколько товаров для этого штрихкода");
             if(found.Count == 0)
                 return null;
+            // Выбираем самый приоритетный.
             int index = -1;
             for(int i = 0; i < found.Count; ++i)
             {
@@ -156,20 +160,58 @@ namespace InventoryManager
                 result = found[index];
             if (History.Count > 0)
             {
-                if (History.Peek().CurrentNumber == History.Peek().Number)
-                    History.Peek().ColorOfRow = new SolidColorBrush(FullItemColor);
+                if (History.Peek().Item1.CurrentNumber == History.Peek().Item1.Number)
+                    History.Peek().Item1.ColorOfRow = new SolidColorBrush(FullItemColor);
                 else
-                    History.Peek().ColorOfRow = new SolidColorBrush(DefaultItemColor);
+                    History.Peek().Item1.ColorOfRow = new SolidColorBrush(DefaultItemColor);
             }
             ++result.CurrentNumber;
-            History.Push(result);
+            History.Push(new Tuple<Item, int>(result, 1));
             result.ColorOfRow = new SolidColorBrush(LastItemColor);
+            FixNumbers();
             return result;
         }
 
         public Item Add(Item item)
         {
-            return Add(new List<string> { item.Id });
+            return Add(new List<string>() { item.Id });
+        }
+
+        public Item Add(Item item, int number)
+        {
+            if (History.Count > 0)
+            {
+                if (History.Peek().Item1.CurrentNumber == History.Peek().Item1.Number)
+                    History.Peek().Item1.ColorOfRow = new SolidColorBrush(FullItemColor);
+                else
+                    History.Peek().Item1.ColorOfRow = new SolidColorBrush(DefaultItemColor);
+            }
+            int add = item.To == "ИЗЛИШЕК" ? number : 
+                Math.Min(number, item.Number - item.CurrentNumber);
+            item.CurrentNumber += add;
+            History.Push(new Tuple<Item, int>(item, add));
+            number -= add;
+            Item result = number > 0 ? new Item() : item;
+            if(number > 0)
+            {
+                item.ColorOfRow = new SolidColorBrush(FullItemColor);
+                result.Id = item.Id;
+                result.Name = item.Name;
+                result.To = "ИЗЛИШЕК";
+                result.From = "ИЗЛИШЕК";
+                items.Add(result);
+                result.CurrentNumber += number;
+                History.Push(new Tuple<Item, int>(result, number));
+            }
+            result.ColorOfRow = new SolidColorBrush(LastItemColor);
+            FixNumbers();
+            return result;
+        }
+
+        private void FixNumbers()
+        {
+            for (int i = 0; i < items.Count; ++i)
+                items[i].PreviousNumber = items[i].CurrentNumber;
         }
 
         public void Save(string path)
@@ -183,6 +225,7 @@ namespace InventoryManager
                 {
                     sheet.Cells[i + 2, 4] = items[i].CurrentNumber.ToString();
                     sheet.Cells[i + 2, 9] = items[i].Comment;
+                    sheet.Cells[i + 2, 10] = items[i].Log.ToString();
                     if (items[i].To == "ИЗЛИШЕК")
                     {
                         sheet.Cells[i + 2, 1] = items[i].Order;
@@ -212,11 +255,15 @@ namespace InventoryManager
 
         public void Cancel()
         {
-            --History.Peek().CurrentNumber;
-            History.Peek().ColorOfRow = new SolidColorBrush(DefaultItemColor);
+            History.Peek().Item1.CurrentNumber -= History.Peek().Item2;
+            History.Peek().Item1.PreviousNumber = History.Peek().Item1.CurrentNumber;
+            if (History.Peek().Item1.CurrentNumber == History.Peek().Item1.Number)
+                History.Peek().Item1.ColorOfRow = new SolidColorBrush(FullItemColor);
+            else
+                History.Peek().Item1.ColorOfRow = new SolidColorBrush(DefaultItemColor);
             History.Pop();
             if(History.Count > 0)
-                History.Peek().ColorOfRow = new SolidColorBrush(LastItemColor);
+                History.Peek().Item1.ColorOfRow = new SolidColorBrush(LastItemColor);
         }
 
         private int GetPrior(Item item)

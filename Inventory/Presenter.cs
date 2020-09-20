@@ -22,6 +22,7 @@ namespace InventoryManager
             window.saveTable += OnSaveTable;
             window.cancel += OnCancel;
             window.addWithoutBarcode += OnAddWithoutBarcode;
+            window.cellChanged += OnCellChanged;
         }
 
         private void OnLoadTable(object sender, EventArgs e)
@@ -102,6 +103,17 @@ namespace InventoryManager
         public void OnAddWithoutBarcode(object sender, EventArgs e)
         {
             Item result = table.Add(window.SelectedItem);
+            window.ShowHeap(result.To);
+            window.ShowName(result.Name);
+            OnVisibleItemsChanged(this, EventArgs.Empty);
+            window.SetDataGrid(table.VisibleItems);
+            window.Clear = true;
+            window.IsCancelActive = true;
+        }
+
+        public void OnCellChanged(object sender, EventArgs e)
+        {
+            Item result = table.Add(window.SelectedItem, window.AddedNumber);
             window.ShowHeap(result.To);
             window.ShowName(result.Name);
             OnVisibleItemsChanged(this, EventArgs.Empty);

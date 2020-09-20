@@ -37,11 +37,11 @@
                 <ListBox x:Name="providersCheckBox" IsEnabled="False" ItemsSource="{Binding Providers}" Grid.Row="0" Margin="20,20,20,20">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Name}" Checked="OnCheckBoxChanged" Unchecked="OnCheckBoxChanged"/>
+                            <CheckBox IsChecked="{Binding IsChecked}" Content="{Binding Name}" Checked="OnVisibleItemsChanged" Unchecked="OnVisibleItemsChanged"/>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <CheckBox Name="isOnlyUnfilled" IsEnabled="False" Content="Показать только неполные" Grid.Row="1" FontSize="20" Checked="OnCheckBoxChanged" Unchecked="OnCheckBoxChanged" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0" VerticalContentAlignment="Center"/>
+                <CheckBox Name="isOnlyUnfilled" IsEnabled="False" Content="Показать только неполные" Grid.Row="1" FontSize="20" Checked="OnVisibleItemsChanged" Unchecked="OnVisibleItemsChanged" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0" VerticalContentAlignment="Center"/>
             </Grid>
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
@@ -65,7 +65,7 @@
                                 <ColumnDefinition Width="70"/>
                             </Grid.ColumnDefinitions>
                             <Label FontSize="20" Margin="10,10,10,0" Content="Введите штрихкод:" VerticalAlignment="Bottom" Grid.Column="0" HorizontalAlignment="Left"/>
-                            <Button x:Name="refreshButton" Margin="10,0,10,0" Grid.Column="1" Click="OnRefreshButtonClick" HorizontalAlignment="Right" ToolTip="Очистка поля ввода штрихкода">
+                            <Button x:Name="refreshButton" IsEnabled="False" Margin="10,0,10,0" Grid.Column="1" Click="OnRefreshButtonClick" HorizontalAlignment="Right" ToolTip="Очистка поля ввода штрихкода">
                                 <StackPanel>
                                     <Image Source="/refresh.png" Grid.Row="1"/>
                                 </StackPanel>
@@ -79,7 +79,7 @@
                             <RowDefinition/>
                         </Grid.RowDefinitions>
                         <Label FontSize="20" Grid.Row="0"  Margin="10,10,10,0" Content="Поиск по наименованию:" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
-                        <TextBox x:Name="searchTextBox" IsEnabled="False" FontSize="20" Grid.Row="1" Margin="10,10,10,10" TextChanged="OnSearchTextChanged"/>
+                        <TextBox x:Name="searchTextBox" IsEnabled="False" FontSize="20" Grid.Row="1" Margin="10,10,10,10" TextChanged="OnVisibleItemsChanged"/>
                     </Grid>
                     <Grid Grid.Column="2">
                         <Grid.RowDefinitions>
@@ -102,7 +102,7 @@
                 </Grid>
             </Grid>
         </Grid>
-        <DataGrid x:Name="dataGridView" Margin="20,10,20,10" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="False" ItemsSource="{Binding Items}" Grid.Row="1">
+        <DataGrid x:Name="dataGridView" CurrentCellChanged="OnCellChanged" Margin="20,10,20,10" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="False" ItemsSource="{Binding Items}" Grid.Row="1">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Заказ" Binding="{Binding Order}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Id" Binding="{Binding Id}" IsReadOnly="True"/>

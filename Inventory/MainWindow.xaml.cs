@@ -41,12 +41,15 @@ namespace Inventory
                 saveDatabaseButton.IsEnabled = true;
                 isOnlyUnfilled.IsEnabled = true;
                 addWithoutBarcodeButton.IsEnabled = true;
+                refreshButton.IsEnabled = true;
             }
         }
 
 
-        public event EventHandler<EventArgs> loadTable;
+        // Действия с таблицой.
         public string TableFilePath { get; private set; }
+        public event EventHandler<EventArgs> loadTable;
+        public event EventHandler<EventArgs> saveTable;
         private void OnLoadTable(object sender, EventArgs e)
         {
             try
@@ -69,7 +72,6 @@ namespace Inventory
                     "Ошибка при загрузке таблицы");
             }
         }
-        public event EventHandler<EventArgs> saveTable;
         private void OnSaveTable(object sender, EventArgs e)
         {
             try
@@ -86,8 +88,10 @@ namespace Inventory
         }
 
 
-        public event EventHandler<EventArgs> loadDatabase;
+        // Действия с базой.
         public string DatabaseFilePath { get; private set; }
+        public event EventHandler<EventArgs> loadDatabase;
+        public event EventHandler<EventArgs> saveDatabase;
         private void OnLoadDatabase(object sender, EventArgs e)
         {
             try
@@ -111,9 +115,6 @@ namespace Inventory
                     "Ошибка при загрузке базы");
             }
         }
-
-
-        public event EventHandler<EventArgs> saveDatabase;
         private void OnSaveDatabase(object sender, EventArgs e)
         {
             try
@@ -130,6 +131,7 @@ namespace Inventory
         }
 
 
+        // Действия, меняющие отображаемые товары.
         public class Box
         {
             public bool IsChecked { get; set; } = true;
@@ -138,7 +140,6 @@ namespace Inventory
         }
         public List<Box> Providers { get; private set; } = new List<Box>();
         public bool IsOnlyUnfilled { get; private set; } = false;
-        private bool isAllChosen = true;
         public void SetProviders(List<string> providers)
         {
             Providers = new List<Box>();
@@ -147,7 +148,10 @@ namespace Inventory
                 Providers.Add(new Box(providers[i]));
             providersCheckBox.ItemsSource = Providers;
         }
-        public void OnCheckBoxChanged(object sender, EventArgs e)
+        public string SearchText { get; private set; } = "";
+        private bool isAllChosen = true;
+        public event EventHandler<EventArgs> visibleItemsChanged;
+        public void OnVisibleItemsChanged(object sender, EventArgs e)
         {
             try
             {
@@ -155,25 +159,15 @@ namespace Inventory
                 {
                     isAllChosen = Providers[0].IsChecked;
                     for (int i = 1; i < providersCheckBox.Items.Count; ++i)
-                    {
                         Providers[i].IsChecked = isAllChosen;
-                    }
                 }
                 bool hasUnselected = false;
                 for (int i = 1; i < Providers.Count; ++i)
                     if (!Providers[i].IsChecked)
                         hasUnselected = true;
-                if (hasUnselected)
-                {
-                    isAllChosen = false;
-                    Providers[0].IsChecked = false;
-                }
-                else
-                {
-                    isAllChosen = true;
-                    Providers[0].IsChecked = true;
-                }
+                isAllChosen = Providers[0].IsChecked = !hasUnselected;
                 IsOnlyUnfilled = (bool)isOnlyUnfilled.IsChecked;
+                SearchText = searchTextBox.Text;
                 visibleItemsChanged?.Invoke(this, EventArgs.Empty);
                 providersCheckBox.ItemsSource = Providers;
                 providersCheckBox.Items.Refresh();
@@ -183,18 +177,65 @@ namespace Inventory
             {
                 MessageBox.Show(ex.Message + Environment.NewLine +
                     ex.StackTrace + Environment.NewLine +
-                    "Ошибка при изменение поставщиков");
+                    "Ошибка при изменение поставщиков или ввода в строку поиска");
             }
         }
 
 
+        // Отображение информации.
+        public void ShowHeap(string heap)
+        {
+            heapTextBox.Text = heap;
+        }
+        public void ShowName(string name)
+        {
+            nameTextBox.Text = name;
+        }
+        public void ShowMessage(string text)
+        {
+            MessageBox.Show(text);
+        }
+        public void OnRefreshButtonClick(object sender, EventArgs e)
+        {
+            barcodeTextBox.Text = "";
+            barcodeTextBox.Focus();
+        }
+        public void SetDataGrid(List<Item> items)
+        {
+            try
+            {
+                dataGridView.ItemsSource = items;
+                for (int i = 0; i < items.Count; ++i)
+                    if (items[i].ColorOfRow.Color == Table.LastItemColor)
+                        dataGridView.ScrollIntoView(dataGridView.Items[i]);
+                dataGridView.UpdateLayout();
+                dataGridView.Items.Refresh();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message + Environment.NewLine +
+                    ex.StackTrace + Environment.NewLine +
+                    "Ошибка при отображении таблицы");
+            }
+        }
+
+
+
+        // Добавление товара.
+        public Item SelectedItem { get; private set; }
+        public int AddedNumber { get; private set; }
+        public bool IsCancelActive { get; set; } = false;
+        public event EventHandler<EventArgs> addLink;
+        public event EventHandler<EventArgs> addWithoutBarcode;
+        public event EventHandler<EventArgs> cancel;
         public event EventHandler<EventArgs> inputBarcode;
+        public event EventHandler<EventArgs> cellChanged;
         public string Barcode { get; private set; }
         public bool Clear { get; set; } = false;
         // False, если событие вызвано изменением текста через код,
         // все остальное время true.
         private bool isFirstLevel = true;
-        // Таймер для перевода фаокуса с поля ввода штрихкода в 
+        // Таймер для перевода фокуса с поля ввода штрихкода в 
         // поле поиска по наименованию. Если прошло 2 секунды после
         // ввода последнего символа и не найдено такого штрихкода, то 
         // переводится фокус.
@@ -231,51 +272,23 @@ namespace Inventory
                     "Ошибка при вводе штрихкода");
             }
         }
-
-
-        public event EventHandler<EventArgs> visibleItemsChanged;
-        public string SearchText { get; private set; } = "";
-        private void OnSearchTextChanged(object sender, EventArgs e)
-        {
-            try
-            {
-                SearchText = searchTextBox.Text;
-                visibleItemsChanged?.Invoke(this, EventArgs.Empty);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message + Environment.NewLine +
-                    ex.StackTrace + Environment.NewLine +
-                    "Ошибка ввода в строку поиска");
-            }
-        }
-
-
-        public event EventHandler<EventArgs> addLink;
-        public Item SelectedItem { get; private set; }
         private void OnAddLink(object sender, EventArgs e)
         {
             try
             {
                 if (barcodeTextBox.Text == "")
-                {
                     MessageBox.Show("Пустой штрихкод");
-                    return;
-                }
-                if (dataGridView.SelectedItems.Count == 1 ||
+                else if (dataGridView.SelectedItems.Count == 1 ||
                     dataGridView.SelectedCells.Count == 1)
                 {
                     SelectedItem = dataGridView.SelectedItems[0] as Item;
+                    addLink?.Invoke(this, EventArgs.Empty);
+                    OnBarcodeTextChanged(this, EventArgs.Empty);
+                    searchTextBox.Text = "";
+                    barcodeTextBox.Focus();
                 }
                 else
-                {
                     MessageBox.Show("Для связывания должен быть выбран ровно один товар");
-                    return;
-                }
-                addLink?.Invoke(this, EventArgs.Empty);
-                OnBarcodeTextChanged(this, EventArgs.Empty);
-                searchTextBox.Text = "";
-                barcodeTextBox.Focus();
             }
             catch (Exception ex)
             {
@@ -284,8 +297,6 @@ namespace Inventory
                     "Ошибка при связывании");
             }
         }
-
-        public event EventHandler<EventArgs> addWithoutBarcode;
         public void OnAddWithoutBarcode(object sender, EventArgs e)
         {
             try
@@ -294,18 +305,18 @@ namespace Inventory
                     dataGridView.SelectedCells.Count == 1)
                 {
                     SelectedItem = dataGridView.SelectedItems[0] as Item;
+                    addWithoutBarcode?.Invoke(this, EventArgs.Empty);
+                    searchTextBox.Text = "";
+                    barcodeTextBox.Text = "";
+                    Clear = false;
+                    cancelButton.IsEnabled = IsCancelActive;
+                    barcodeTextBox.Focus();
                 }
                 else
                 {
                     MessageBox.Show("Для добавления должен быть выбран ровно один товар");
                     return;
                 }
-                addWithoutBarcode?.Invoke(this, EventArgs.Empty);
-                searchTextBox.Text = "";
-                barcodeTextBox.Text = "";
-                Clear = false;
-                cancelButton.IsEnabled = IsCancelActive;
-                barcodeTextBox.Focus();
             }
             catch (Exception ex)
             {
@@ -314,42 +325,41 @@ namespace Inventory
                     "Ошибка при добавлении без штрихкода");
             }
         }
-
-
-        public void ShowHeap(string heap)
+        private void OnCellChanged(object sender, EventArgs e)
         {
-            heapTextBox.Text = heap;
+            System.Windows.Controls.DataGrid grid = 
+                (System.Windows.Controls.DataGrid)sender;
+            for (int i = 0; i < grid.Items.Count; ++i)
+            {
+                Item item = grid.Items[i] as Item;
+                if (item.CurrentNumber != item.PreviousNumber)
+                {
+                    SelectedItem = item;
+                    AddedNumber = item.CurrentNumber - item.PreviousNumber;
+                    item.CurrentNumber = item.PreviousNumber;
+                    cellChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+            cancelButton.IsEnabled = IsCancelActive;
         }
-
-        public void ShowName(string name)
-        {
-            nameTextBox.Text = name;
-        }
-
-        public void SetDataGrid(List<Item> items)
+        public void OnCancel(object sender, EventArgs e)
         {
             try
             {
-                dataGridView.ItemsSource = items;
-                for (int i = 0; i < items.Count; ++i)
-                    if (items[i].ColorOfRow.Color == Table.LastItemColor)
-                        dataGridView.ScrollIntoView(dataGridView.Items[i]);
-                dataGridView.UpdateLayout();
-                dataGridView.Items.Refresh();
+                cancel?.Invoke(this, EventArgs.Empty);
+                cancelButton.IsEnabled = IsCancelActive;
+                barcodeTextBox.Focus();
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message + Environment.NewLine +
                     ex.StackTrace + Environment.NewLine +
-                    "Ошибка при отображении таблицы");
+                    "Ошибка при отмене");
             }
         }
 
-        public void ShowMessage(string text)
-        {
-            MessageBox.Show(text);
-        }
 
+        // Закрытие.
         public void OnClosing(object sender, CancelEventArgs e)
         {
             if (isTableLoaded && isDatabaseLoaded)
@@ -367,30 +377,6 @@ namespace Inventory
                     e.Cancel = true;
                 }
             }
-        }
-
-        public bool IsCancelActive { get; set; } = false;
-        public event EventHandler<EventArgs> cancel;
-        public void OnCancel(object sender, EventArgs e)
-        {
-            try
-            {
-                cancel?.Invoke(this, EventArgs.Empty);
-                cancelButton.IsEnabled = IsCancelActive;
-                barcodeTextBox.Focus();
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message + Environment.NewLine +
-                    ex.StackTrace + Environment.NewLine +
-                    "Ошибка при отмене");
-            }
-        }
-
-        public void OnRefreshButtonClick(object sender, EventArgs e)
-        {
-            barcodeTextBox.Text = "";
-            barcodeTextBox.Focus();
         }
     }
 }
