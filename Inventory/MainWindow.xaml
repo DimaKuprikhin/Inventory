@@ -102,7 +102,7 @@
                 </Grid>
             </Grid>
         </Grid>
-        <DataGrid x:Name="dataGridView" CurrentCellChanged="OnCellChanged" Margin="20,10,20,10" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="False" ItemsSource="{Binding Items}" Grid.Row="1">
+        <DataGrid x:Name="dataGridView" RowHeight="20" CurrentCellChanged="OnCellChanged" Margin="20,10,20,10" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" IsReadOnly="False" ItemsSource="{Binding Items}" Grid.Row="1">
             <DataGrid.Columns>
                 <DataGridTextColumn Header="Заказ" Binding="{Binding Order}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Id" Binding="{Binding Id}" IsReadOnly="True"/>
@@ -112,6 +112,7 @@
                 <DataGridTextColumn Header="Город" Binding="{Binding To}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Поставщик" Binding="{Binding From}" IsReadOnly="True"/>
                 <DataGridTextColumn Header="Комментарий" Binding="{Binding Comment}" IsReadOnly="False"/>
+                <DataGridTextColumn Header="Лог" Binding="{Binding Log}" IsReadOnly="True"/>
             </DataGrid.Columns>
             <DataGrid.RowStyle>
                 <Style TargetType="DataGridRow">

@@ -18,7 +18,7 @@ namespace InventoryManager
             set
             {
                 if (value < 0 || value == currentNumber) return;
-                if (Log.Length != 0) 
+                if (Log.Length != 0)
                     Log.Append(Environment.NewLine);
                 DateTime now = DateTime.Now;
                 if (value > currentNumber)
@@ -29,7 +29,7 @@ namespace InventoryManager
                 currentNumber = value;
             }
         }
-        public int Number { get; set; }
+        public int Number { get; set; } = 0;
         public string To { get; set; }
         public string From { get; set; }
         public string Comment { get; set; }
@@ -37,5 +37,13 @@ namespace InventoryManager
         public SolidColorBrush ColorOfRow { get; set; } = new SolidColorBrush(Color.FromArgb(255, 255, 255, 255));
 
         public Item() { }
+
+        public Item(string id, string name, string to, string from)
+        {
+            Id = id;
+            Name = name;
+            To = to;
+            From = from;
+        }
     }
 }

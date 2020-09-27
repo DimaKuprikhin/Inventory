@@ -25,18 +25,29 @@ namespace InventoryManager
             window.cellChanged += OnCellChanged;
         }
 
+        // Табица.
         private void OnLoadTable(object sender, EventArgs e)
         {
             table = new Table(window.TableFilePath);
             window.SetDataGrid(table.VisibleItems);
             window.SetProviders(table.Providers);
         }
-
         private void OnSaveTable(object sender, EventArgs e)
         {
             table.Save(window.TableFilePath);
         }
 
+        // База.
+        public void OnLoadDatabase(object sender, EventArgs e)
+        {
+            database = new Database(window.DatabaseFilePath);
+        }
+        public void OnSaveDatabase(object sender, EventArgs e)
+        {
+            database.Save();
+        }
+
+        // Отображение.
         public void OnVisibleItemsChanged(object sender, EventArgs e)
         {
             List<string> providers = new List<string>();
@@ -47,16 +58,28 @@ namespace InventoryManager
             window.SetDataGrid(table.VisibleItems);
         }
 
-        public void OnLoadDatabase(object sender, EventArgs e)
+        // Добавление товара.
+        public void OnAddLink(object sender, EventArgs e)
         {
-            database = new Database(window.DatabaseFilePath, true);
+            database.AddNewPair(window.Barcode, window.SelectedItem.Id);
+            window.IsCancelActive = true;
         }
-
-        public void OnSaveDatabase(object sender, EventArgs e)
+        public void OnAddWithoutBarcode(object sender, EventArgs e)
         {
-            database.Save();
+            Item result = table.Add(window.SelectedItem);
+            window.ShowHeap(result.To);
+            window.ShowName(result.Name);
+            OnVisibleItemsChanged(this, EventArgs.Empty);
+            window.SetDataGrid(table.VisibleItems);
+            window.Clear = true;
+            window.IsCancelActive = true;
         }
-
+        public void OnCancel(object sender, EventArgs e)
+        {
+            table.Cancel();
+            window.IsCancelActive = table.History.Count > 0;
+            window.SetDataGrid(table.VisibleItems);
+        }
         public void OnInputBarcode(object sender, EventArgs e)
         {
             List<string> ids = database.FindPair(window.Barcode);
@@ -65,9 +88,9 @@ namespace InventoryManager
             {
                 result = table.Add(ids);
             }
-            catch(ArgumentException)
+            catch (ArgumentException)
             {
-                window.ShowMessage(       "Найдено два разных товара в " +
+                window.ShowMessage("Найдено два разных товара в " +
                     Environment.NewLine + "текущей таблице для введеного" +
                     Environment.NewLine + "штрихкода. Удалите один из них" +
                     Environment.NewLine + "или добавьте товар без штрихкода.");
@@ -86,31 +109,6 @@ namespace InventoryManager
             if (table.History.Count > 0)
                 window.IsCancelActive = true;
         }
-
-        public void OnAddLink(object sender, EventArgs e)
-        {
-            database.AddNewPair(window.Barcode, window.SelectedItem.Id);
-            window.IsCancelActive = true;
-        }
-
-        public void OnCancel(object sender, EventArgs e)
-        {
-            table.Cancel();
-            window.IsCancelActive = table.History.Count > 0;
-            window.SetDataGrid(table.VisibleItems);
-        }
-
-        public void OnAddWithoutBarcode(object sender, EventArgs e)
-        {
-            Item result = table.Add(window.SelectedItem);
-            window.ShowHeap(result.To);
-            window.ShowName(result.Name);
-            OnVisibleItemsChanged(this, EventArgs.Empty);
-            window.SetDataGrid(table.VisibleItems);
-            window.Clear = true;
-            window.IsCancelActive = true;
-        }
-
         public void OnCellChanged(object sender, EventArgs e)
         {
             Item result = table.Add(window.SelectedItem, window.AddedNumber);

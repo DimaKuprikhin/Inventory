@@ -155,6 +155,15 @@ namespace Inventory
         {
             try
             {
+                SearchText = searchTextBox.Text;
+                if (SearchText.Length > 10)
+                {
+                    string temp = searchTextBox.Text;
+                    searchTextBox.Text = "";
+                    barcodeTextBox.Focus();
+                    barcodeTextBox.Text = temp;
+                    barcodeTextBox.CaretIndex = barcodeTextBox.Text.Length;
+                }
                 if (Providers[0].IsChecked ^ isAllChosen)
                 {
                     isAllChosen = Providers[0].IsChecked;
@@ -167,11 +176,9 @@ namespace Inventory
                         hasUnselected = true;
                 isAllChosen = Providers[0].IsChecked = !hasUnselected;
                 IsOnlyUnfilled = (bool)isOnlyUnfilled.IsChecked;
-                SearchText = searchTextBox.Text;
                 visibleItemsChanged?.Invoke(this, EventArgs.Empty);
                 providersCheckBox.ItemsSource = Providers;
                 providersCheckBox.Items.Refresh();
-                barcodeTextBox.Focus();
             }
             catch (Exception ex)
             {

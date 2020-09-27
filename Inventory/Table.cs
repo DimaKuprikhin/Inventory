@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Media;
 using Excel = Microsoft.Office.Interop.Excel;
@@ -48,6 +49,10 @@ namespace InventoryManager
                         next.Comment = "";
                     else
                         next.Comment = comment.ToString();
+                    next.Log.Clear();
+                    var log = sheet.Cells[i, 10].Value2;
+                    if (log != null)
+                        next.Log.Append(log.ToString());
                     if(next.CurrentNumber == next.Number)
                         next.ColorOfRow = new SolidColorBrush(FullItemColor);
                     else
@@ -70,27 +75,9 @@ namespace InventoryManager
                 Marshal.ReleaseComObject(app);
                 for (int i = 0; i < items.Count; ++i)
                     VisibleItems.Add(items[i]);
-                FindProviders();
+                Providers = items.Select(item => item.From).Distinct().ToList();
+                Providers.Add("ИЗЛИШЕК");
             }
-        }
-
-        private void FindProviders()
-        {
-            for (int i = 0; i < items.Count; ++i)
-            {
-                bool has = false;
-                for (int j = 0; j < Providers.Count; ++j)
-                {
-                    if (items[i].From == Providers[j])
-                    {
-                        has = true;
-                        break;
-                    }
-                }
-                if (!has)
-                    Providers.Add(items[i].From);
-            }
-            Providers.Add("ИЗЛИШЕК");
         }
 
         public void UpdateVisibleItems(List<string> providers, string name, 
@@ -117,14 +104,9 @@ namespace InventoryManager
         public Item Add(List<string> ids)
         {
             // Ищем все подходящие товары.
-            List<Item> found = new List<Item>();
-            for (int i = 0; i < VisibleItems.Count; ++i)
-                for (int j = 0; j < ids.Count; ++j)
-                    if (VisibleItems[i].Id == ids[j])
-                        found.Add(VisibleItems[i]);
-            for (int i = 1; i < found.Count; ++i)
-                if (found[i].Id != found[0].Id)
-                    throw new ArgumentException("несколько товаров для этого штрихкода");
+            List<Item> found = VisibleItems.FindAll(i => ids.Find(s => s == i.Id) != null);
+            if(found.Select(i => i.Id).Distinct().Count() > 1)
+                throw new ArgumentException("несколько товаров для этого штрихкода");
             if(found.Count == 0)
                 return null;
             // Выбираем самый приоритетный.
@@ -147,13 +129,8 @@ namespace InventoryManager
                     result = found[found.Count - 1];
                 else
                 {
-                    Item item = new Item();
-                    item.Id = found[0].Id;
-                    item.Name = found[0].Name;
-                    item.To = "ИЗЛИШЕК";
-                    item.From = "ИЗЛИШЕК";
-                    items.Add(item);
-                    result = item;
+                    result = new Item(found[0].Id, found[0].Name, "ИЗЛИШЕК", "ИЗЛИШЕК");
+                    items.Add(result);
                 }
             }
             else
@@ -236,6 +213,7 @@ namespace InventoryManager
                         sheet.Cells[i + 2, 7] = items[i].From;
                     }
                 }
+                book.Save();
             }
             catch
             {
