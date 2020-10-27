@@ -20,8 +20,7 @@ namespace InventoryManager
         /// <summary>
         /// Конструктор базы кодов, работающий с файлом csv.
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="isCsv"> Перегрузка со втрорым bool, для загрузки из csc. </param>
+        /// <param name="path"> Путь к базе кодов. </param>
         public Database(string path)
         {
             try

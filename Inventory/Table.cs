@@ -80,8 +80,8 @@ namespace InventoryManager
             }
         }
 
-        public void UpdateVisibleItems(List<string> providers, string name, 
-            bool isOnlyUnfulled)
+        public void UpdateVisibleItems(List<string> providers, 
+            string name, bool isOnlyUnfulled)
         {
             if(name != null)
                 name = name.ToLower();
@@ -91,8 +91,10 @@ namespace InventoryManager
                 for (int j = 0; j < providers.Count; ++j)
                 {
                     if (items[i].From == providers[j] && 
-                        (name == null || name == "" || items[i].Name.ToLower().Contains(name)) && 
-                        (!isOnlyUnfulled || isOnlyUnfulled && items[i].CurrentNumber < items[i].Number))
+                        (name == null || name == "" || 
+                        items[i].Name.ToLower().Contains(name)) && 
+                        (!isOnlyUnfulled || isOnlyUnfulled && 
+                        items[i].CurrentNumber < items[i].Number))
                     {
                         VisibleItems.Add(items[i]);
                         break;
@@ -117,8 +119,8 @@ namespace InventoryManager
                     continue;
                 if (index == -1)
                     index = i;
-                if(GetPrior(found[i]) < GetPrior(found[index]) ||
-                    (GetPrior(found[i]) == GetPrior(found[index]) && 
+                if(GetToPrior(found[i]) < GetToPrior(found[index]) ||
+                    (GetToPrior(found[i]) == GetToPrior(found[index]) && 
                     found[i].Number < found[index].Number))
                     index = i;
             }
@@ -136,13 +138,8 @@ namespace InventoryManager
             else
                 result = found[index];
             if (History.Count > 0)
-            {
-                if (History.Peek().Item1.CurrentNumber == History.Peek().Item1.Number)
-                    History.Peek().Item1.ColorOfRow = new SolidColorBrush(FullItemColor);
-                else
-                    History.Peek().Item1.ColorOfRow = new SolidColorBrush(DefaultItemColor);
-            }
-            ++result.CurrentNumber;
+                UpdateItemColor(History.Peek().Item1);
+            result.AddWithLogging(1);
             History.Push(new Tuple<Item, int>(result, 1));
             result.ColorOfRow = new SolidColorBrush(LastItemColor);
             FixNumbers();
@@ -152,34 +149,24 @@ namespace InventoryManager
         public Item Add(Item item, int number)
         {
             if (History.Count > 0)
-            {
-                if (History.Peek().Item1.CurrentNumber == History.Peek().Item1.Number)
-                    History.Peek().Item1.ColorOfRow = new SolidColorBrush(FullItemColor);
-                else
-                    History.Peek().Item1.ColorOfRow = new SolidColorBrush(DefaultItemColor);
-            }
+                UpdateItemColor(History.Peek().Item1);
             int add = item.To == "ИЗЛИШЕК" ? number : 
                 Math.Min(number, item.Number - item.CurrentNumber);
-            item.CurrentNumber += add;
-            History.Push(new Tuple<Item, int>(item, add));
+            item.AddWithLogging(add);
+            if(add != 0)
+                History.Push(new Tuple<Item, int>(item, add));
             number -= add;
             Item result = number > 0 ? new Item() : item;
             if(number > 0)
-            {
-                item.ColorOfRow = new SolidColorBrush(FullItemColor);
-                result.Id = item.Id;
-                result.Name = item.Name;
-                result.To = "ИЗЛИШЕК";
-                result.From = "ИЗЛИШЕК";
-                items.Add(result);
-                result.CurrentNumber += number;
-                History.Push(new Tuple<Item, int>(result, number));
-            }
+                return Add(new List<string> { item.Id });
             result.ColorOfRow = new SolidColorBrush(LastItemColor);
             FixNumbers();
             return result;
         }
 
+        /// <summary>
+        /// Приравнивает значения PreviousNumber к CurrentNumber в товарах.
+        /// </summary>
         private void FixNumbers()
         {
             for (int i = 0; i < items.Count; ++i)
@@ -229,12 +216,8 @@ namespace InventoryManager
         public void Cancel()
         {
             Item item = History.Peek().Item1;
-            item.CurrentNumber -= History.Peek().Item2;
-            item.PreviousNumber = item.CurrentNumber;
-            if (item.CurrentNumber == item.Number)
-                item.ColorOfRow = new SolidColorBrush(FullItemColor);
-            else
-                item.ColorOfRow = new SolidColorBrush(DefaultItemColor);
+            item.AddWithLogging(-History.Peek().Item2);
+            UpdateItemColor(item);
             if (item.To == "ИЗЛИШЕК" && item.CurrentNumber == 0)
                 items.Remove(item);
             History.Pop();
@@ -242,7 +225,7 @@ namespace InventoryManager
                 History.Peek().Item1.ColorOfRow = new SolidColorBrush(LastItemColor);
         }
 
-        private int GetPrior(Item item)
+        private int GetToPrior(Item item)
         {
             if (item.To.ToLower() == "доставка" && item.Number == 1) return 0;
             if (item.To.ToLower() == "н.новгород" && item.Number == 1) return 1;
@@ -255,6 +238,14 @@ namespace InventoryManager
             if (item.To.ToLower() == "магазин") return 8;
             throw new ArgumentException("Неизвестная точка доставки. " +
                 "Допустимы только: Доставка, Н.Новгород, Воронеж, Рязань, Магазин");
+        }
+
+        private void UpdateItemColor(Item item)
+        {
+            if (item.CurrentNumber == item.Number)
+                item.ColorOfRow = new SolidColorBrush(FullItemColor);
+            else
+                item.ColorOfRow = new SolidColorBrush(DefaultItemColor);
         }
     }
 }

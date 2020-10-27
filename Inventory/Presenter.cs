@@ -48,6 +48,10 @@ namespace InventoryManager
         }
 
         // Отображение.
+        /// <summary>
+        /// Обновляет вид таблицы согласно выбранным поставшикам и тексту в
+        /// поле поиска.
+        /// </summary>
         public void OnVisibleItemsChanged(object sender, EventArgs e)
         {
             List<string> providers = new List<string>();
@@ -57,36 +61,54 @@ namespace InventoryManager
             table.UpdateVisibleItems(providers, window.SearchText, window.IsOnlyUnfilled);
             window.SetDataGrid(table.VisibleItems);
         }
+        /// <summary>
+        /// Выводим информацию о добавленном товаре: кучу и его наименование.
+        /// Также обновляем вид таблицы, активируем кнопки отмены и очищаем поля.
+        /// </summary>
+        private void ShowItem(string heap, string name)
+        {
+            window.ShowHeap(heap);
+            window.ShowName(name);
+            OnVisibleItemsChanged(this, EventArgs.Empty);
+            window.Clear = true;
+            if(table.History.Count > 0)
+                window.IsCancelActive = true;
+        }
 
         // Добавление товара.
+        /// <summary>
+        /// Добавляет новую пару штрихкода и id в базу и добавляет 1 в 
+        /// выбранный пользователем товар.
+        /// </summary>
         public void OnAddLink(object sender, EventArgs e)
         {
             database.AddNewPair(window.Barcode, window.SelectedItem.Id);
             Item result = table.Add(window.SelectedItem, 1);
-            window.ShowHeap(result.To);
-            window.ShowName(result.Name);
-            OnVisibleItemsChanged(this, EventArgs.Empty);
-            window.SetDataGrid(table.VisibleItems);
-            window.Clear = true;
-            window.IsCancelActive = true;
+            ShowItem(result.To, result.Name);
         }
+        /// <summary>
+        /// Добавляет 1 в выбранный пользователем товар.
+        /// </summary>
         public void OnAddWithoutBarcode(object sender, EventArgs e)
         {
             Item result = table.Add(window.SelectedItem, 1);
-            window.ShowHeap(result.To);
-            window.ShowName(result.Name);
-            OnVisibleItemsChanged(this, EventArgs.Empty);
-            window.SetDataGrid(table.VisibleItems);
-            window.Clear = true;
-            window.IsCancelActive = true;
+            ShowItem(result.To, result.Name);
         }
+        /// <summary>
+        /// Отменяет последнее добавление товара.
+        /// </summary>
         public void OnCancel(object sender, EventArgs e)
         {
             table.Cancel();
             window.IsCancelActive = table.History.Count > 0;
             OnVisibleItemsChanged(this, EventArgs.Empty);
-            window.SetDataGrid(table.VisibleItems);
         }
+        /// <summary>
+        /// Добавляет 1 в товар, соответствующий введеному пользователем 
+        /// штрихкоду. Если такого нет, то выводит в поле кучи "Не найдено".
+        /// Если есть два разных товара с подходящим id, то показывает 
+        /// сообщение во всплывающем окне.
+        /// </summary>
         public void OnInputBarcode(object sender, EventArgs e)
         {
             List<string> ids = database.FindPair(window.Barcode);
@@ -108,23 +130,15 @@ namespace InventoryManager
                 window.ShowHeap("Не найдено");
                 return;
             }
-            window.ShowHeap(result.To);
-            window.ShowName(result.Name);
-            OnVisibleItemsChanged(this, EventArgs.Empty);
-            window.SetDataGrid(table.VisibleItems);
-            window.Clear = true;
-            if (table.History.Count > 0)
-                window.IsCancelActive = true;
+            ShowItem(result.To, result.Name);
         }
+        /// <summary>
+        /// Обрабатывает изменение количества товара руками в таблице.
+        /// </summary>
         public void OnCellChanged(object sender, EventArgs e)
         {
             Item result = table.Add(window.SelectedItem, window.AddedNumber);
-            window.ShowHeap(result.To);
-            window.ShowName(result.Name);
-            OnVisibleItemsChanged(this, EventArgs.Empty);
-            window.SetDataGrid(table.VisibleItems);
-            window.Clear = true;
-            window.IsCancelActive = true;
+            ShowItem(result.To, result.Name);
         }
     }
 }

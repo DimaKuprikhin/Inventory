@@ -337,13 +337,23 @@ namespace Inventory
         }
         private void OnCellChanged(object sender, EventArgs e)
         {
-            System.Windows.Controls.DataGrid grid = 
+
+            System.Windows.Controls.DataGrid grid =
                 (System.Windows.Controls.DataGrid)sender;
             for (int i = 0; i < grid.Items.Count; ++i)
             {
                 Item item = grid.Items[i] as Item;
                 if (item.CurrentNumber != item.PreviousNumber)
                 {
+                    if (item.CurrentNumber > item.Number && item.Number != 0)
+                    {
+                        ShowMessage("Вы попытались добавить в товар больше, " +
+                            "чем его количество.");
+                        item.CurrentNumber = item.PreviousNumber;
+                        item.CurrentNumber = item.CurrentNumber;
+                        visibleItemsChanged?.Invoke(this, EventArgs.Empty);
+                        return;
+                    }
                     SelectedItem = item;
                     AddedNumber = item.CurrentNumber - item.PreviousNumber;
                     item.CurrentNumber = item.PreviousNumber;
@@ -388,5 +398,6 @@ namespace Inventory
                 }
             }
         }
+
     }
 }

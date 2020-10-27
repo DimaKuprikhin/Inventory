@@ -9,26 +9,43 @@ namespace InventoryManager
         public string Order { get; set; }
         public string Id { get; set; }
         public string Name { get; set; }
-
-        public int PreviousNumber = 0;
+        
+        /// <summary>
+        /// В PreviousNumber храним предыдущее значение CurrentNumber для того,
+        /// чтобы при изменении количества руками через таблицу, мы могли 
+        /// знать, на какое количество изменилось количество товара. В иных
+        /// случаях добавление товара, добавляется 1.
+        /// Все изменения CurrentNumber записываются в лог и отображаются в 
+        /// таблице.
+        /// </summary>
+        public int PreviousNumber { get; set; } = 0;
         private int currentNumber = 0;
         public int CurrentNumber
         {
             get => currentNumber;
             set
             {
-                if (value < 0 || value == currentNumber) return;
-                if (Log.Length != 0)
-                    Log.Append(Environment.NewLine);
-                DateTime now = DateTime.Now;
-                if (value > currentNumber)
-                    Log.Append($"Добавлено {value - currentNumber} {now.Hour}:{now.Minute} {now.Day}.{now.Month}");
-                if (value < currentNumber)
-                    Log.Append($"Убрано {currentNumber - value} {now.Hour}:{now.Minute} {now.Day}.{now.Month}");
+                if (value < 0)
+                    return;
                 PreviousNumber = currentNumber;
                 currentNumber = value;
             }
         }
+        public void AddWithLogging(int number)
+        {
+            if (number == 0)
+                return;
+            CurrentNumber += number;
+            if (Log.Length != 0)
+                Log.Append(Environment.NewLine);
+            DateTime now = DateTime.Now;
+            if (currentNumber > PreviousNumber)
+                Log.Append($"Добавлено {currentNumber - PreviousNumber} {now.Hour}:{now.Minute}");
+            if (currentNumber < PreviousNumber)
+                Log.Append($"Убрано {PreviousNumber - currentNumber} {now.Hour}:{now.Minute}");
+            PreviousNumber = currentNumber;
+        }
+
         public int Number { get; set; } = 0;
         public string To { get; set; }
         public string From { get; set; }
