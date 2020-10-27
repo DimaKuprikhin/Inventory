@@ -149,11 +149,6 @@ namespace InventoryManager
             return result;
         }
 
-        public Item Add(Item item)
-        {
-            return Add(new List<string>() { item.Id });
-        }
-
         public Item Add(Item item, int number)
         {
             if (History.Count > 0)
@@ -233,12 +228,15 @@ namespace InventoryManager
 
         public void Cancel()
         {
-            History.Peek().Item1.CurrentNumber -= History.Peek().Item2;
-            History.Peek().Item1.PreviousNumber = History.Peek().Item1.CurrentNumber;
-            if (History.Peek().Item1.CurrentNumber == History.Peek().Item1.Number)
-                History.Peek().Item1.ColorOfRow = new SolidColorBrush(FullItemColor);
+            Item item = History.Peek().Item1;
+            item.CurrentNumber -= History.Peek().Item2;
+            item.PreviousNumber = item.CurrentNumber;
+            if (item.CurrentNumber == item.Number)
+                item.ColorOfRow = new SolidColorBrush(FullItemColor);
             else
-                History.Peek().Item1.ColorOfRow = new SolidColorBrush(DefaultItemColor);
+                item.ColorOfRow = new SolidColorBrush(DefaultItemColor);
+            if (item.To == "ИЗЛИШЕК" && item.CurrentNumber == 0)
+                items.Remove(item);
             History.Pop();
             if(History.Count > 0)
                 History.Peek().Item1.ColorOfRow = new SolidColorBrush(LastItemColor);

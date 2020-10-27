@@ -41,7 +41,7 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-                <CheckBox Name="isOnlyUnfilled" IsEnabled="False" Content="Показать только неполные" Grid.Row="1" FontSize="20" Checked="OnVisibleItemsChanged" Unchecked="OnVisibleItemsChanged" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0" VerticalContentAlignment="Center"/>
+                <CheckBox Name="isOnlyUnfilled" IsEnabled="False" Content="Показать только неполные" Grid.Row="1" FontSize="18" Checked="OnVisibleItemsChanged" Unchecked="OnVisibleItemsChanged" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="20,0,0,0" VerticalContentAlignment="Center"/>
             </Grid>
             <Grid Grid.Column="2">
                 <Grid.RowDefinitions>
@@ -64,7 +64,7 @@
                                 <ColumnDefinition />
                                 <ColumnDefinition Width="70"/>
                             </Grid.ColumnDefinitions>
-                            <Label FontSize="20" Margin="10,10,10,0" Content="Введите штрихкод:" VerticalAlignment="Bottom" Grid.Column="0" HorizontalAlignment="Left"/>
+                            <Label FontSize="18" Margin="10,10,10,0" Content="Введите штрихкод:" VerticalAlignment="Bottom" Grid.Column="0" HorizontalAlignment="Left"/>
                             <Button x:Name="refreshButton" IsEnabled="False" Margin="10,0,10,0" Grid.Column="1" Click="OnRefreshButtonClick" HorizontalAlignment="Right" ToolTip="Очистка поля ввода штрихкода">
                                 <StackPanel>
                                     <Image Source="/refresh.png" Grid.Row="1"/>
@@ -78,7 +78,7 @@
                             <RowDefinition/>
                             <RowDefinition/>
                         </Grid.RowDefinitions>
-                        <Label FontSize="20" Grid.Row="0"  Margin="10,10,10,0" Content="Поиск по наименованию:" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
+                        <Label FontSize="18" Grid.Row="0"  Margin="10,10,10,0" Content="Поиск по наименованию:" HorizontalAlignment="Left" VerticalAlignment="Bottom"/>
                         <TextBox x:Name="searchTextBox" IsEnabled="False" FontSize="20" Grid.Row="1" Margin="10,10,10,10" TextChanged="OnVisibleItemsChanged"/>
                     </Grid>
                     <Grid Grid.Column="2">

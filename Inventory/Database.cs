@@ -49,6 +49,9 @@ namespace InventoryManager
 
         public void AddNewPair(string barcode, string id)
         {
+            for (int i = 0; i < Pairs.Count; ++i)
+                if (Pairs[i].Item1 == barcode && Pairs[i].Item2 == id)
+                    return;
             Pairs.Add(new Tuple<string, string>(barcode, id));
         }
 

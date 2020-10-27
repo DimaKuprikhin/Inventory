@@ -205,6 +205,7 @@ namespace Inventory
         public void OnRefreshButtonClick(object sender, EventArgs e)
         {
             barcodeTextBox.Text = "";
+            searchTextBox.Text = "";
             barcodeTextBox.Focus();
         }
         public void SetDataGrid(List<Item> items)
@@ -288,10 +289,12 @@ namespace Inventory
                 else if (dataGridView.SelectedItems.Count == 1 ||
                     dataGridView.SelectedCells.Count == 1)
                 {
+                    searchTextBox.Text = "";
+                    barcodeTextBox.Text = "";
                     SelectedItem = dataGridView.SelectedItems[0] as Item;
                     addLink?.Invoke(this, EventArgs.Empty);
-                    OnBarcodeTextChanged(this, EventArgs.Empty);
-                    searchTextBox.Text = "";
+                    Clear = false;
+                    cancelButton.IsEnabled = IsCancelActive;
                     barcodeTextBox.Focus();
                 }
                 else
@@ -311,10 +314,10 @@ namespace Inventory
                 if (dataGridView.SelectedItems.Count == 1 ||
                     dataGridView.SelectedCells.Count == 1)
                 {
-                    SelectedItem = dataGridView.SelectedItems[0] as Item;
-                    addWithoutBarcode?.Invoke(this, EventArgs.Empty);
                     searchTextBox.Text = "";
                     barcodeTextBox.Text = "";
+                    SelectedItem = dataGridView.SelectedItems[0] as Item;
+                    addWithoutBarcode?.Invoke(this, EventArgs.Empty);
                     Clear = false;
                     cancelButton.IsEnabled = IsCancelActive;
                     barcodeTextBox.Focus();

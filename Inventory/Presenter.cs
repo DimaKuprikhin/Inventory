@@ -62,11 +62,17 @@ namespace InventoryManager
         public void OnAddLink(object sender, EventArgs e)
         {
             database.AddNewPair(window.Barcode, window.SelectedItem.Id);
+            Item result = table.Add(window.SelectedItem, 1);
+            window.ShowHeap(result.To);
+            window.ShowName(result.Name);
+            OnVisibleItemsChanged(this, EventArgs.Empty);
+            window.SetDataGrid(table.VisibleItems);
+            window.Clear = true;
             window.IsCancelActive = true;
         }
         public void OnAddWithoutBarcode(object sender, EventArgs e)
         {
-            Item result = table.Add(window.SelectedItem);
+            Item result = table.Add(window.SelectedItem, 1);
             window.ShowHeap(result.To);
             window.ShowName(result.Name);
             OnVisibleItemsChanged(this, EventArgs.Empty);
@@ -78,6 +84,7 @@ namespace InventoryManager
         {
             table.Cancel();
             window.IsCancelActive = table.History.Count > 0;
+            OnVisibleItemsChanged(this, EventArgs.Empty);
             window.SetDataGrid(table.VisibleItems);
         }
         public void OnInputBarcode(object sender, EventArgs e)
