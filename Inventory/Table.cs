@@ -227,6 +227,7 @@ namespace InventoryManager
 
         private int GetToPrior(Item item)
         {
+            if (item.To.ToLower() == "яндекс") return -1;
             if (item.To.ToLower() == "доставка" && item.Number == 1) return 0;
             if (item.To.ToLower() == "н.новгород" && item.Number == 1) return 1;
             if (item.To.ToLower() == "воронеж" && item.Number == 1) return 2;
