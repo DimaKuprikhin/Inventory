@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Threading;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
-using System.Runtime.InteropServices;
-using System.Windows.Media;
-using Excel = Microsoft.Office.Interop.Excel;
 
 namespace InventoryManager
 {
